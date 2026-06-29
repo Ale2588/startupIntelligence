@@ -1,0 +1,312 @@
+{
+  "nodes": [
+    {
+      "id": "stripe",
+      "label": "Stripe",
+      "type": "startup",
+      "description": "Leader globale pagamenti B2B/B2C",
+      "metadata": {
+        "city": "San Francisco / Dublino",
+        "founded": "2010",
+        "funding": "$9B+",
+        "role": "Pagamenti digitali"
+      }
+    },
+    {
+      "id": "revolut",
+      "label": "Revolut",
+      "type": "startup",
+      "description": "Neobank europeo, 45M clienti",
+      "metadata": {
+        "city": "Londra, UK",
+        "founded": "2015",
+        "funding": "$1.7B",
+        "role": "Neobanking / Crypto"
+      }
+    },
+    {
+      "id": "scalapay",
+      "label": "Scalapay",
+      "type": "startup",
+      "description": "Primo unicorno fintech italiano BNPL",
+      "metadata": {
+        "city": "Milano, Italia",
+        "founded": "2019",
+        "funding": "$700M+",
+        "role": "Buy Now Pay Later"
+      }
+    },
+    {
+      "id": "satispay",
+      "label": "Satispay",
+      "type": "startup",
+      "description": "App pagamento mobile leader Italia",
+      "metadata": {
+        "city": "Milano, Italia",
+        "founded": "2013",
+        "funding": "€320M+",
+        "role": "Mobile Payment / Wallet"
+      }
+    },
+    {
+      "id": "sumeria",
+      "label": "Sumeria (ex Lydia)",
+      "type": "startup",
+      "description": "Neobank francese, rebrand 2024",
+      "metadata": {
+        "city": "Parigi, Francia",
+        "founded": "2011",
+        "funding": "N/D",
+        "role": "Neobanking"
+      }
+    },
+    {
+      "id": "andreessen_horowitz",
+      "label": "Andreessen Horowitz",
+      "type": "investor",
+      "description": "VC top-tier, investitore Stripe",
+      "metadata": {
+        "city": "Menlo Park, USA",
+        "founded": "",
+        "funding": "",
+        "role": "Venture Capital"
+      }
+    },
+    {
+      "id": "tiger_global",
+      "label": "Tiger Global",
+      "type": "investor",
+      "description": "Fondo globale, Revolut e Scalapay",
+      "metadata": {
+        "city": "New York, USA",
+        "founded": "",
+        "funding": "",
+        "role": "Hedge Fund / VC"
+      }
+    },
+    {
+      "id": "softbank_vision_fund",
+      "label": "SoftBank Vision Fund",
+      "type": "investor",
+      "description": "Mega-fondo, investitore Revolut",
+      "metadata": {
+        "city": "Tokyo, Giappone",
+        "founded": "",
+        "funding": "",
+        "role": "Venture Capital"
+      }
+    },
+    {
+      "id": "patrick_collison",
+      "label": "Patrick Collison",
+      "type": "founder",
+      "description": "Co-founder e CEO di Stripe",
+      "metadata": {
+        "city": "San Francisco",
+        "founded": "",
+        "funding": "",
+        "role": "CEO Stripe"
+      }
+    },
+    {
+      "id": "nikolay_storonsky",
+      "label": "Nikolay Storonsky",
+      "type": "founder",
+      "description": "Co-founder e CEO di Revolut",
+      "metadata": {
+        "city": "Londra",
+        "founded": "",
+        "funding": "",
+        "role": "CEO Revolut"
+      }
+    },
+    {
+      "id": "simone_mancini",
+      "label": "Simone Mancini",
+      "type": "founder",
+      "description": "Co-founder e CEO di Scalapay",
+      "metadata": {
+        "city": "Milano",
+        "founded": "",
+        "funding": "",
+        "role": "CEO Scalapay"
+      }
+    },
+    {
+      "id": "alberto_dalmasso",
+      "label": "Alberto Dalmasso",
+      "type": "founder",
+      "description": "Co-founder e CEO di Satispay",
+      "metadata": {
+        "city": "Milano",
+        "founded": "",
+        "funding": "",
+        "role": "CEO Satispay"
+      }
+    },
+    {
+      "id": "pagamenti_digitali",
+      "label": "Pagamenti Digitali",
+      "type": "sector",
+      "description": "Settore pagamenti online e mobile",
+      "metadata": {
+        "city": "",
+        "founded": "",
+        "funding": "",
+        "role": "Sector"
+      }
+    },
+    {
+      "id": "neobanking",
+      "label": "Neobanking",
+      "type": "sector",
+      "description": "Banche digitali senza filiali fisiche",
+      "metadata": {
+        "city": "",
+        "founded": "",
+        "funding": "",
+        "role": "Sector"
+      }
+    },
+    {
+      "id": "bnpl",
+      "label": "Buy Now Pay Later",
+      "type": "sector",
+      "description": "Pagamenti dilazionati senza interessi",
+      "metadata": {
+        "city": "",
+        "founded": "",
+        "funding": "",
+        "role": "Sector"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source": "stripe",
+      "target": "patrick_collison",
+      "label": "fondata da",
+      "weight": 1
+    },
+    {
+      "source": "stripe",
+      "target": "andreessen_horowitz",
+      "label": "finanziata da",
+      "weight": 1
+    },
+    {
+      "source": "stripe",
+      "target": "pagamenti_digitali",
+      "label": "opera in",
+      "weight": 1
+    },
+    {
+      "source": "revolut",
+      "target": "nikolay_storonsky",
+      "label": "fondata da",
+      "weight": 1
+    },
+    {
+      "source": "revolut",
+      "target": "softbank_vision_fund",
+      "label": "finanziata da",
+      "weight": 1
+    },
+    {
+      "source": "revolut",
+      "target": "tiger_global",
+      "label": "finanziata da",
+      "weight": 1
+    },
+    {
+      "source": "revolut",
+      "target": "neobanking",
+      "label": "opera in",
+      "weight": 1
+    },
+    {
+      "source": "revolut",
+      "target": "pagamenti_digitali",
+      "label": "opera in",
+      "weight": 1
+    },
+    {
+      "source": "scalapay",
+      "target": "simone_mancini",
+      "label": "fondata da",
+      "weight": 1
+    },
+    {
+      "source": "scalapay",
+      "target": "tiger_global",
+      "label": "finanziata da",
+      "weight": 1
+    },
+    {
+      "source": "scalapay",
+      "target": "bnpl",
+      "label": "opera in",
+      "weight": 1
+    },
+    {
+      "source": "scalapay",
+      "target": "pagamenti_digitali",
+      "label": "opera in",
+      "weight": 1
+    },
+    {
+      "source": "satispay",
+      "target": "alberto_dalmasso",
+      "label": "fondata da",
+      "weight": 1
+    },
+    {
+      "source": "satispay",
+      "target": "pagamenti_digitali",
+      "label": "opera in",
+      "weight": 1
+    },
+    {
+      "source": "sumeria",
+      "target": "neobanking",
+      "label": "opera in",
+      "weight": 1
+    },
+    {
+      "source": "sumeria",
+      "target": "pagamenti_digitali",
+      "label": "opera in",
+      "weight": 1
+    },
+    {
+      "source": "revolut",
+      "target": "sumeria",
+      "label": "competitor di",
+      "weight": 1
+    },
+    {
+      "source": "revolut",
+      "target": "satispay",
+      "label": "competitor di",
+      "weight": 1
+    },
+    {
+      "source": "satispay",
+      "target": "stripe",
+      "label": "competitor di",
+      "weight": 1
+    },
+    {
+      "source": "sumeria",
+      "target": "satispay",
+      "label": "competitor di",
+      "weight": 1
+    },
+    {
+      "source": "scalapay",
+      "target": "revolut",
+      "label": "competitor di",
+      "weight": 1
+    }
+  ]
+}
