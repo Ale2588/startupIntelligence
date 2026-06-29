@@ -2,8 +2,8 @@ name: Update News Daily
 
 on:
   schedule:
-    - cron: '0 7 * * *'  # ogni mattina alle 7 UTC
-  workflow_dispatch:       # permette di lanciarlo manualmente
+    - cron: '0 7 * * *'
+  workflow_dispatch:
 
 jobs:
   update-news:
@@ -25,7 +25,7 @@ jobs:
       - name: Run news update
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: python update_news.py
+        run: python scripts/update_news.py
 
       - name: Commit updated news
         uses: stefanzweifel/git-auto-commit-action@v5
