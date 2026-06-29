@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Startup Radar</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #080a0f;
+  --surface:   #0e1117;
+  --surface2:  #141820;
+  --border:    #1c2130;
+  --border2:   #252d3d;
+  --text:      #dce4f0;
+  --muted:     #4a5568;
+  --muted2:    #64748b;
+  --teal:      #00d4aa;
+  --teal-dim:  rgba(0,212,170,0.12);
+  --teal-glow: rgba(0,212,170,0.35);
+  --amber:     #f5a623;
+  --emerald:   #34d399;
+  --violet:    #818cf8;
+  --rose:      #f472b6;
+
+  --c-startup:  var(--violet);
+  --c-investor: var(--amber);
+  --c-founder:  var(--emerald);
+  --c-sector:   var(--rose);
+
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Inter', system-ui, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  overflow: hidden;
+}
+
+/* ── HEADER ─────────────────────────────────────────── */
+#header {
+  height: 48px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 16px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+}
+
+#header .logo {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--teal);
+  letter-spacing: 0.05em;
+}
+
+#header .separator {
+  width: 1px; height: 20px;
+  background: var(--border2);
+}
+
+#header .sector-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted2);
+}
+
+#header .sector-value {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text);
+}
+
+.header-stats {
+  margin-left: auto;
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.hstat {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.hstat b { color: var(--teal); font-weight: 600; }
+
+.updated-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--teal);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%,100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* ── LAYOUT ─────────────────────────────────────────── */
+#app {
+  display: flex;
+  height: calc(100vh - 48px);
+  overflow: hidden;
+}
+
+/* ── GRAPH PANEL ─────────────────────────────────────── */
+#graph-panel {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+/* subtle grid */
+#graph-panel::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 40px 40px;
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+#graph-svg { width: 100%; height: 100%; }
+
+/* ── GRAPH CONTROLS ──────────────────────────────────── */
+.graph-controls {
+  position: absolute;
+  bottom: 20px; left: 20px;
+  display: flex;
+  gap: 6px;
+}
+
+.ctrl {
+  width: 32px; height: 32px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  color: var(--muted2);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+  font-family: var(--mono);
+}
+.ctrl:hover { border-color: var(--teal); color: var(--teal); }
+
+/* ── LEGEND ──────────────────────────────────────────── */
+.graph-legend {
+  position: absolute;
+  top: 16px; left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(14,17,23,0.85);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  backdrop-filter: blur(8px);
+}
+
+.leg-item {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted2);
+  cursor: pointer;
+  transition: color 0.15s;
+  user-select: none;
+}
+.leg-item:hover { color: var(--text); }
+.leg-item.off { opacity: 0.3; }
+
+.leg-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.leg-item.startup  .leg-dot { background: var(--c-startup); }
+.leg-item.investor .leg-dot { background: var(--c-investor); }
+.leg-item.founder  .leg-dot { background: var(--c-founder); }
+.leg-item.sector   .leg-dot { background: var(--c-sector); }
+
+/* ── NEWS PANEL ──────────────────────────────────────── */
+#news-panel {
+  width: 360px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+}
+
+#news-header {
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+#news-title {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+#news-company {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+#news-meta {
+  margin-top: 6px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  display: flex;
+  gap: 12px;
+}
+
+#news-meta .tag {
+  padding: 2px 7px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.tag.startup  { background: rgba(129,140,248,0.15); color: var(--violet); }
+.tag.investor { background: rgba(245,166,35,0.15);  color: var(--amber); }
+.tag.founder  { background: rgba(52,211,153,0.15);  color: var(--emerald); }
+.tag.sector   { background: rgba(244,114,182,0.15); color: var(--rose); }
+
+#news-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border2) transparent;
+}
+
+/* ── EMPTY STATE ─────────────────────────────────────── */
+#news-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 12px;
+  padding: 40px;
+  text-align: center;
+}
+
+#news-empty .empty-icon {
+  font-size: 32px;
+  opacity: 0.3;
+}
+
+#news-empty p {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+/* ── NEWS CONTENT ────────────────────────────────────── */
+.news-section {
+  padding: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.news-section-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--teal);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.news-text {
+  font-size: 13px;
+  line-height: 1.75;
+  color: var(--text);
+}
+
+/* terminal ticker animation */
+.news-text.typing {
+  overflow: hidden;
+}
+
+.news-date {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.news-date::before {
+  content: '';
+  display: block;
+  width: 16px; height: 1px;
+  background: var(--border2);
+}
+
+/* metadata grid */
+.meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.meta-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px;
+}
+
+.meta-card .mk {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.meta-card .mv {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* connections list */
+.connections {
+  padding: 16px 20px;
+}
+
+.conn-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.conn-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.conn-item:last-child { border-bottom: none; }
+.conn-item:hover .conn-name { color: var(--teal); }
+
+.conn-dot {
+  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+}
+.conn-dot.startup  { background: var(--c-startup); }
+.conn-dot.investor { background: var(--c-investor); }
+.conn-dot.founder  { background: var(--c-founder); }
+.conn-dot.sector   { background: var(--c-sector); }
+
+.conn-name {
+  font-size: 12px;
+  color: var(--text);
+  transition: color 0.15s;
+  flex: 1;
+}
+
+.conn-rel {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--muted);
+}
+
+/* ── NODES ───────────────────────────────────────────── */
+.node { cursor: pointer; }
+
+.node circle {
+  stroke-width: 1.5;
+  transition: r 0.2s;
+}
+
+.node.type-startup  circle { fill: rgba(129,140,248,0.15); stroke: var(--c-startup); }
+.node.type-investor circle { fill: rgba(245,166,35,0.15);  stroke: var(--c-investor); }
+.node.type-founder  circle { fill: rgba(52,211,153,0.15);  stroke: var(--c-founder); }
+.node.type-sector   circle { fill: rgba(244,114,182,0.1);  stroke: var(--c-sector); }
+
+.node.selected circle {
+  stroke-width: 2.5;
+  filter: drop-shadow(0 0 8px currentColor);
+}
+
+.node.dimmed { opacity: 0.15; }
+
+.node text {
+  font-family: var(--mono);
+  font-size: 10px;
+  fill: var(--muted2);
+  pointer-events: none;
+  text-anchor: middle;
+}
+
+.node.selected text { fill: var(--text); }
+.node:hover text { fill: var(--text); }
+
+/* ── LINKS ───────────────────────────────────────────── */
+.link {
+  stroke: var(--border2);
+  stroke-opacity: 0.6;
+  stroke-width: 1;
+  fill: none;
+}
+
+.link.highlighted {
+  stroke: var(--teal);
+  stroke-opacity: 0.5;
+  stroke-width: 1.5;
+}
+
+/* ── TOOLTIP ─────────────────────────────────────────── */
+#tooltip {
+  position: fixed;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 5px;
+  padding: 5px 10px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.1s;
+  z-index: 100;
+  white-space: nowrap;
+}
+#tooltip.show { opacity: 1; }
+
+/* ── MOBILE ──────────────────────────────────────────── */
+@media (max-width: 768px) {
+  #app { flex-direction: column; }
+
+  #graph-panel { flex: 1; min-height: 0; }
+
+  #news-panel {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    width: 100%;
+    height: 60vh;
+    border-left: none;
+    border-top: 1px solid var(--border);
+    border-radius: 16px 16px 0 0;
+    transform: translateY(100%);
+    z-index: 50;
+    transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
+  #news-panel.open {
+    transform: translateY(0);
+  }
+
+  #news-panel::before {
+    content: '';
+    display: block;
+    width: 36px; height: 4px;
+    background: var(--border2);
+    border-radius: 2px;
+    margin: 10px auto 0;
+    flex-shrink: 0;
+  }
+
+  .graph-legend { display: none; }
+
+  .header-stats { display: none; }
+
+  #header .sector-label { display: none; }
+
+  .meta-grid { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div class="logo">STARTUP RADAR</div>
+  <div class="separator"></div>
+  <span class="sector-label">SETTORE&nbsp;</span>
+  <span class="sector-value" id="h-sector">—</span>
+  <div class="header-stats">
+    <div class="hstat"><b id="h-nodes">—</b> nodi</div>
+    <div class="hstat"><b id="h-edges">—</b> link</div>
+    <div class="hstat">
+      <div class="updated-dot"></div>
+      <span id="h-updated">—</span>
+    </div>
+  </div>
+</div>
+
+<div id="app">
+  <div id="graph-panel">
+    <svg id="graph-svg"></svg>
+
+    <div class="graph-legend">
+      <div class="leg-item startup"  onclick="toggleType('startup')">
+        <div class="leg-dot"></div>Startup
+      </div>
+      <div class="leg-item investor" onclick="toggleType('investor')">
+        <div class="leg-dot"></div>Investor
+      </div>
+      <div class="leg-item founder"  onclick="toggleType('founder')">
+        <div class="leg-dot"></div>Founder
+      </div>
+      <div class="leg-item sector"   onclick="toggleType('sector')">
+        <div class="leg-dot"></div>Settore
+      </div>
+    </div>
+
+    <div class="graph-controls">
+      <button class="ctrl" onclick="zoomIn()">+</button>
+      <button class="ctrl" onclick="zoomOut()">−</button>
+      <button class="ctrl" onclick="zoomReset()">⌖</button>
+    </div>
+  </div>
+
+  <div id="news-panel">
+    <div id="news-header">
+      <div id="news-title">INTELLIGENCE</div>
+      <div id="news-company">—</div>
+      <div id="news-meta"></div>
+    </div>
+    <div id="news-body">
+      <div id="news-empty">
+        <div class="empty-icon">◎</div>
+        <p>Seleziona un nodo nel grafo<br>per vedere le ultime notizie<br>e le connessioni.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="tooltip"></div>
+
+<script>
+// ── STATE ────────────────────────────────────────────
+let graphData = null;
+let newsData = null;
+let selectedNode = null;
+let activeTypes = new Set(['startup','investor','founder','sector']);
+let simulation, svg, g, zoomBehavior;
+let nodeEls, linkEls;
+
+const typeColors = {
+  startup: '#818cf8', investor: '#f5a623', founder: '#34d399', sector: '#f472b6'
+};
+const typeRadius = { startup: 14, investor: 18, founder: 10, sector: 15 };
+
+// ── LOAD DATA ────────────────────────────────────────
+async function init() {
+  try {
+    const [gRes, nRes] = await Promise.all([
+      fetch('graph_data.json'),
+      fetch('news_data.json').catch(() => null)
+    ]);
+
+    graphData = await gRes.json();
+    if (nRes && nRes.ok) newsData = await nRes.json();
+
+    renderGraph();
+    updateHeader();
+  } catch(e) {
+    console.error('Errore caricamento dati:', e);
+  }
+}
+
+function updateHeader() {
+  document.getElementById('h-sector').textContent =
+    graphData.meta?.sector || '—';
+  document.getElementById('h-nodes').textContent =
+    graphData.nodes.length;
+  document.getElementById('h-edges').textContent =
+    graphData.edges.length;
+
+  if (newsData?.updated_at) {
+    const d = new Date(newsData.updated_at);
+    document.getElementById('h-updated').textContent =
+      d.toLocaleDateString('it-IT', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+  }
+}
+
+// ── RENDER GRAPH ─────────────────────────────────────
+function renderGraph() {
+  const el = document.getElementById('graph-svg');
+  const w = el.clientWidth || window.innerWidth * 0.65;
+  const h = el.clientHeight || window.innerHeight - 48;
+
+  svg = d3.select('#graph-svg');
+  svg.selectAll('*').remove();
+
+  const defs = svg.append('defs');
+  defs.append('marker')
+    .attr('id','arr').attr('viewBox','0 -4 8 8')
+    .attr('refX', 20).attr('refY', 0)
+    .attr('markerWidth', 5).attr('markerHeight', 5)
+    .attr('orient', 'auto')
+    .append('path').attr('d','M0,-4L8,0L0,4').attr('fill','#252d3d');
+
+  g = svg.append('g');
+
+  zoomBehavior = d3.zoom()
+    .scaleExtent([0.15, 5])
+    .on('zoom', e => g.attr('transform', e.transform));
+  svg.call(zoomBehavior);
+
+  const nodeMap = {};
+  graphData.nodes.forEach(n => nodeMap[n.id] = n);
+  const validEdges = graphData.edges.filter(e =>
+    nodeMap[e.source] && nodeMap[e.target]
+  );
+
+  // links
+  linkEls = g.append('g').selectAll('line')
+    .data(validEdges).enter()
+    .append('line')
+    .attr('class','link')
+    .attr('marker-end','url(#arr)');
+
+  // nodes
+  nodeEls = g.append('g').selectAll('.node')
+    .data(graphData.nodes).enter()
+    .append('g')
+    .attr('class', d => `node type-${d.type}`)
+    .call(d3.drag()
+      .on('start', (e,d) => { if(!e.active) simulation.alphaTarget(0.3).restart(); d.fx=d.x; d.fy=d.y; })
+      .on('drag',  (e,d) => { d.fx=e.x; d.fy=e.y; })
+      .on('end',   (e,d) => { if(!e.active) simulation.alphaTarget(0); d.fx=null; d.fy=null; }))
+    .on('click', (e, d) => { e.stopPropagation(); selectNode(d); })
+    .on('mouseover', (e, d) => showTip(e, d.label))
+    .on('mouseout', hideTip);
+
+  nodeEls.append('circle')
+    .attr('r', d => typeRadius[d.type] || 12);
+
+  nodeEls.append('text')
+    .attr('dy', d => (typeRadius[d.type] || 12) + 13)
+    .text(d => d.label.length > 16 ? d.label.slice(0,14)+'…' : d.label);
+
+  // click background to deselect
+  svg.on('click', () => deselect());
+
+  simulation = d3.forceSimulation(graphData.nodes)
+    .force('link', d3.forceLink(validEdges).id(d=>d.id).distance(110).strength(0.35))
+    .force('charge', d3.forceManyBody().strength(-280))
+    .force('center', d3.forceCenter(w/2, h/2))
+    .force('collide', d3.forceCollide().radius(d => (typeRadius[d.type]||12) + 22))
+    .on('tick', () => {
+      linkEls
+        .attr('x1', d=>d.source.x).attr('y1', d=>d.source.y)
+        .attr('x2', d=>d.target.x).attr('y2', d=>d.target.y);
+      nodeEls.attr('transform', d=>`translate(${d.x},${d.y})`);
+    });
+}
+
+// ── SELECT NODE ──────────────────────────────────────
+function selectNode(d) {
+  selectedNode = d;
+
+  // highlight
+  const connected = new Set([d.id]);
+  graphData.edges.forEach(e => {
+    const s = e.source.id || e.source;
+    const t = e.target.id || e.target;
+    if (s === d.id) connected.add(t);
+    if (t === d.id) connected.add(s);
+  });
+
+  nodeEls
+    .classed('selected', n => n.id === d.id)
+    .classed('dimmed', n => !connected.has(n.id));
+
+  linkEls.classed('highlighted', l => {
+    const s = l.source.id || l.source;
+    const t = l.target.id || l.target;
+    return s === d.id || t === d.id;
+  });
+
+  renderNewsPanel(d);
+
+  // mobile: open bottom sheet
+  document.getElementById('news-panel').classList.add('open');
+}
+
+function deselect() {
+  selectedNode = null;
+  nodeEls.classed('selected', false).classed('dimmed', false);
+  linkEls.classed('highlighted', false);
+  document.getElementById('news-panel').classList.remove('open');
+  showEmpty();
+}
+
+// ── NEWS PANEL ───────────────────────────────────────
+function renderNewsPanel(d) {
+  document.getElementById('news-company').textContent = d.label;
+
+  const metaEl = document.getElementById('news-meta');
+  metaEl.innerHTML = `<span class="tag ${d.type}">${d.type}</span>`;
+  if (d.metadata?.city) metaEl.innerHTML += `<span>${d.metadata.city}</span>`;
+  if (d.metadata?.founded) metaEl.innerHTML += `<span>est. ${d.metadata.founded}</span>`;
+
+  const body = document.getElementById('news-body');
+  body.innerHTML = '';
+
+  // metadata cards
+  const meta = d.metadata || {};
+  const cards = [];
+  if (meta.funding) cards.push({k:'FUNDING', v: meta.funding});
+  if (meta.city)    cards.push({k:'SEDE',    v: meta.city});
+  if (meta.founded) cards.push({k:'FONDATA', v: meta.founded});
+  if (meta.role)    cards.push({k:'RUOLO',   v: meta.role});
+
+  if (cards.length) {
+    const grid = document.createElement('div');
+    grid.className = 'meta-grid';
+    cards.forEach(c => {
+      grid.innerHTML += `
+        <div class="meta-card">
+          <div class="mk">${c.k}</div>
+          <div class="mv">${c.v}</div>
+        </div>`;
+    });
+    body.appendChild(grid);
+  }
+
+  // news
+  const newsItem = newsData?.news?.find(n => n.startup_id === d.id);
+  if (newsItem && newsItem.has_news) {
+    const section = document.createElement('div');
+    section.className = 'news-section';
+    section.innerHTML = `
+      <div class="news-section-label">ULTIME NOTIZIE</div>
+      <div class="news-text" id="news-content"></div>
+      <div class="news-date">${newsItem.date || ''}</div>`;
+    body.appendChild(section);
+
+    // typewriter effect
+    const el = section.querySelector('#news-content');
+    typewrite(el, newsItem.summary);
+  } else if (d.description) {
+    const section = document.createElement('div');
+    section.className = 'news-section';
+    section.innerHTML = `
+      <div class="news-section-label">PROFILO</div>
+      <div class="news-text">${d.description}</div>`;
+    body.appendChild(section);
+  }
+
+  // connections
+  const conns = [];
+  graphData.edges.forEach(e => {
+    const s = e.source.id || e.source;
+    const t = e.target.id || e.target;
+    if (s === d.id) {
+      const target = graphData.nodes.find(n => n.id === t);
+      if (target) conns.push({node: target, rel: e.label, dir: 'out'});
+    }
+    if (t === d.id) {
+      const source = graphData.nodes.find(n => n.id === s);
+      if (source) conns.push({node: source, rel: e.label, dir: 'in'});
+    }
+  });
+
+  if (conns.length) {
+    const section = document.createElement('div');
+    section.className = 'connections';
+    section.innerHTML = `<div class="conn-label">CONNESSIONI (${conns.length})</div>`;
+    conns.slice(0, 8).forEach(c => {
+      const item = document.createElement('div');
+      item.className = 'conn-item';
+      item.innerHTML = `
+        <div class="conn-dot ${c.node.type}"></div>
+        <span class="conn-name">${c.node.label}</span>
+        <span class="conn-rel">${c.rel}</span>`;
+      item.onclick = () => selectNode(c.node);
+      section.appendChild(item);
+    });
+    body.appendChild(section);
+  }
+}
+
+// ── TYPEWRITER ───────────────────────────────────────
+function typewrite(el, text) {
+  el.textContent = '';
+  let i = 0;
+  const speed = 12; // ms per char
+  const tick = () => {
+    if (i < text.length) {
+      el.textContent += text[i++];
+      setTimeout(tick, speed);
+    }
+  };
+  tick();
+}
+
+function showEmpty() {
+  document.getElementById('news-body').innerHTML = `
+    <div id="news-empty">
+      <div class="empty-icon">◎</div>
+      <p>Seleziona un nodo nel grafo<br>per vedere le ultime notizie<br>e le connessioni.</p>
+    </div>`;
+  document.getElementById('news-company').textContent = '—';
+  document.getElementById('news-meta').innerHTML = '';
+}
+
+// ── FILTER ───────────────────────────────────────────
+function toggleType(type) {
+  if (activeTypes.has(type)) activeTypes.delete(type);
+  else activeTypes.add(type);
+
+  document.querySelectorAll(`.leg-item.${type}`).forEach(el =>
+    el.classList.toggle('off', !activeTypes.has(type))
+  );
+
+  if (!nodeEls) return;
+  nodeEls.style('opacity', d => activeTypes.has(d.type) ? 1 : 0);
+  linkEls.style('opacity', l => {
+    const sType = graphData.nodes.find(n=>n.id===(l.source.id||l.source))?.type;
+    const tType = graphData.nodes.find(n=>n.id===(l.target.id||l.target))?.type;
+    return (activeTypes.has(sType) && activeTypes.has(tType)) ? 0.6 : 0;
+  });
+}
+
+// ── ZOOM ─────────────────────────────────────────────
+function zoomIn()    { svg.transition().call(zoomBehavior.scaleBy, 1.4); }
+function zoomOut()   { svg.transition().call(zoomBehavior.scaleBy, 0.7); }
+function zoomReset() { svg.transition().call(zoomBehavior.transform, d3.zoomIdentity); }
+
+// ── TOOLTIP ──────────────────────────────────────────
+function showTip(e, text) {
+  const t = document.getElementById('tooltip');
+  t.textContent = text;
+  t.style.left = (e.clientX + 12) + 'px';
+  t.style.top  = (e.clientY - 6) + 'px';
+  t.classList.add('show');
+}
+function hideTip() {
+  document.getElementById('tooltip').classList.remove('show');
+}
+
+// ── START ────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
